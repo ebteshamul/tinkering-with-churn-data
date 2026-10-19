@@ -1,8 +1,8 @@
 ### Here's the process :
   here Custorem id has to be dropped cuz we can use the index number
   many datas are in double dashes, gotta fix those
- and most of then are in strings. many need to be in floot or int (before encoding i guess)
- handle nan values
+  and most of then are in strings. many need to be in floot or int (before encoding i guess)
+  handle nan values
  visualise
  encode
 
@@ -13,3 +13,7 @@ yeah, well cannnot perform fillna without int data. these are in str data type t
 
 okay, all numerical nan values are filled. now i have to figure out how i would fill the str types. do i have to encode them first?
 now all the str values are filled with "mode" though i have confusion in mode was the best choise. actually don't know much about other options
+
+after visualisation before encoding you can see in contracttype column there are "1,2,3,value,unknown" datas which dont mean anything, or i dont understand those. same problem are in plan types and maybe in more columns. and i see meny outliers in churn how  do i fix these?
+
+
