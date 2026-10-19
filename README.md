@@ -5,3 +5,5 @@
  handle nan values
  visualise
  encode
+
+hi, its another day, i found out today that you have to handle nan value first then you can change the data type
