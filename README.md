@@ -10,3 +10,5 @@ hi, its another day, i found out today that you have to handle nan value first t
 
 
 yeah, well cannnot perform fillna without int data. these are in str data type though they are numbers. if i try to convert them i have to delete the nan value rows, which i don't want
+
+okay, all numerical nan values are filled. now i have to figure out how i would fill the str types. do i have to encode them first?
