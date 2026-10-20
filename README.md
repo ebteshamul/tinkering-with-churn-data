@@ -16,4 +16,7 @@ now all the str values are filled with "mode" though i have confusion in mode wa
 
 after visualisation before encoding you can see in contracttype column there are "1,2,3,value,unknown" datas which dont mean anything, or i dont understand those. same problem are in plan types and maybe in more columns. and i see meny outliers in churn how  do i fix these?
 
+i have to encode the data. numerical columns will be left as it is but i have to ordinal encode or oneHotEncode rest of the columns. (i have to know more about each encoding techniques)
+
+next comes definign x and y then splitting them using sklearn's train-test split
 
