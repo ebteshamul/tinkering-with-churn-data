@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Churn risk</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📉</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <h1>Churn risk</h1>
+      <nav class="tabs" role="tablist" aria-label="Sections">
+        <button role="tab" id="tab-single" aria-controls="panel-single" aria-selected="true">One customer</button>
+        <button role="tab" id="tab-batch" aria-controls="panel-batch" aria-selected="false" tabindex="-1">Many customers</button>
+        <button role="tab" id="tab-model" aria-controls="panel-model" aria-selected="false" tabindex="-1">About the model</button>
+      </nav>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" role="alert" hidden></div>
+
+  <main>
+    <!-- One customer -->
+    <section id="panel-single" role="tabpanel" aria-labelledby="tab-single" class="single">
+      <form id="customer-form" class="form" autocomplete="off" novalidate>
+        <div class="form-head">
+          <div>
+            <h2>Customer details</h2>
+            <p class="lede">The estimate updates as you change a value.</p>
+          </div>
+          <div class="presets">
+            <button type="button" class="chip" data-preset="typical">Typical customer</button>
+            <button type="button" class="chip" data-preset="leaving">Short tenure, unhappy</button>
+            <button type="button" class="chip" data-preset="loyal">Long tenure, engaged</button>
+          </div>
+        </div>
+        <div id="form-groups"></div>
+      </form>
+
+      <aside class="result" aria-live="polite">
+        <div id="result-empty" class="result-empty" hidden>
+          <p id="result-empty-text">Fill in every field to see an estimate.</p>
+        </div>
+
+        <div id="result-body">
+          <figure class="gauge">
+            <svg viewBox="0 0 220 128" role="img" aria-labelledby="gauge-title">
+              <title id="gauge-title">Churn probability</title>
+              <path class="g-track" d="M 20 110 A 90 90 0 0 1 200 110" pathLength="100"/>
+              <path id="g-value" class="g-value" d="M 20 110 A 90 90 0 0 1 200 110" pathLength="100" stroke-dasharray="0 100"/>
+              <line id="g-tick" class="g-tick" x1="0" y1="0" x2="0" y2="0"/>
+              <text id="g-number" class="g-number" x="110" y="104" text-anchor="middle">0%</text>
+            </svg>
+          </figure>
+          <h2 id="verdict" class="verdict">Likely to stay</h2>
+          <p id="verdict-detail" class="verdict-detail"></p>
+          <ul id="warnings" class="notes"></ul>
+
+          <div class="threshold">
+            <label for="threshold-single">Flag customers above <output id="threshold-out-single">50%</output></label>
+            <input type="range" id="threshold-single" class="threshold-input" min="0.05" max="0.95" step="0.05" value="0.5">
+            <p id="threshold-impact" class="impact"></p>
+          </div>
+
+          <div class="drivers">
+            <h3>What is driving this estimate</h3>
+            <p class="lede">Compared with an average customer in the training data.</p>
+            <ul id="drivers-list" class="drivers-list"></ul>
+            <div class="legend"><span><i class="sw sw-down"></i>Lowers risk</span><span><i class="sw sw-up"></i>Raises risk</span></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Many customers -->
+    <section id="panel-batch" role="tabpanel" aria-labelledby="tab-batch" class="batch" hidden>
+      <div class="batch-intro">
+        <h2>Score a list of customers</h2>
+        <p class="lede">Upload a CSV with one row per customer. Every feature column is required; a CustomerID column is optional. Missing values in a row are filled with typical values from the training data.</p>
+        <p><a href="/api/template.csv" class="link">Download a template CSV</a></p>
+      </div>
+
+      <label id="dropzone" class="dropzone" for="csv-input">
+        <input type="file" id="csv-input" accept=".csv,text/csv">
+        <span class="dz-title">Choose a CSV file</span>
+        <span class="dz-sub" id="dz-sub">or drop it here. Up to 10,000 rows and 5 MB.</span>
+      </label>
+      <div id="batch-error" class="inline-error" role="alert" hidden></div>
+
+      <div id="batch-results" hidden>
+        <div class="summary">
+          <div><span class="big" id="sum-rows">0</span><span>customers scored</span></div>
+          <div><span class="big" id="sum-flagged">0</span><span id="sum-flagged-label">flagged at 50%</span></div>
+          <div><span class="big" id="sum-avg">0%</span><span>average churn probability</span></div>
+        </div>
+        <p id="sum-note" class="notes-line" hidden></p>
+
+        <div class="batch-controls">
+          <div class="threshold inline">
+            <label for="threshold-batch">Flag customers above <output id="threshold-out-batch">50%</output></label>
+            <input type="range" id="threshold-batch" class="threshold-input" min="0.05" max="0.95" step="0.05" value="0.5">
+          </div>
+          <label class="check"><input type="checkbox" id="only-flagged"> Show flagged only</label>
+          <label class="select">Sort
+            <select id="sort-by">
+              <option value="desc">Highest risk first</option>
+              <option value="asc">Lowest risk first</option>
+              <option value="orig">Original order</option>
+            </select>
+          </label>
+          <button type="button" class="btn" id="download-csv">Download results</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Customer</th><th>Churn probability</th><th>Status</th><th>Main risk factor</th><th>Plan</th><th>Contract</th><th class="num">Tenure</th><th class="num">Monthly charges</th></tr>
+            </thead>
+            <tbody id="batch-body"></tbody>
+          </table>
+        </div>
+        <p id="table-note" class="notes-line"></p>
+      </div>
+    </section>
+
+    <!-- About the model -->
+    <section id="panel-model" role="tabpanel" aria-labelledby="tab-model" class="about" hidden>
+      <div class="about-intro">
+        <h2>How well does it work?</h2>
+        <p class="lede" id="about-lede"></p>
+      </div>
+      <div class="stats" id="stats"></div>
+
+      <div class="about-cols">
+        <div>
+          <h3>Test results</h3>
+          <p class="lede" id="confusion-lede"></p>
+          <div class="confusion" id="confusion"></div>
+        </div>
+        <div>
+          <h3>What the model pays attention to</h3>
+          <p class="lede">How much each field moves the estimate, as a share of the total.</p>
+          <ul class="influence" id="influence"></ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
